@@ -37,7 +37,7 @@ defmodule KeycloakEx.Client.User do
       @impl true
       def get_token(client, params, headers) do
         client
-        |> put_header("Accept", "application/json")
+        |> put_headers(maybe_put_public_host_header([{"Accept", "application/json"}], config()))
         |> OAuth2.Strategy.AuthCode.get_token(params, headers)
       end
 
@@ -69,6 +69,7 @@ defmodule KeycloakEx.Client.User do
               {"Accept", "application/json"},
               {"Content-Type", "application/x-www-form-urlencoded"}
             ]
+            |> maybe_put_public_host_header(conf)
           )
 
         Logger.debug("[KeycloakEx.Client.User][introspect] - Response - #{inspect(resp)}")
@@ -93,6 +94,17 @@ defmodule KeycloakEx.Client.User do
           token_url: "#{conf[:host_uri]}/realms/#{conf[:realm]}/protocol/openid-connect/token"
         )
         |> OAuth2.Client.put_serializer("application/json", Jason)
+      end
+
+      defp maybe_put_public_host_header(headers, conf) do
+        case conf[:public_uri] do
+          nil ->
+            headers
+
+          uri ->
+            parsed_uri = URI.parse(uri)
+            [{"Host", "#{parsed_uri.host}:#{parsed_uri.port}"} | headers]
+        end
       end
 
       defp maybe_put_public_auth_uri(conf) do
