@@ -38,9 +38,6 @@ defmodule KeycloakEx.Client.Admin do
         nil
       end
 
-      defp response({:ok, resp}), do: Jason.decode!(resp.body)
-      defp response(resp), do: resp
-
       def get_request_realm(realm, url, body \\ nil) do
         conf = config()
 
