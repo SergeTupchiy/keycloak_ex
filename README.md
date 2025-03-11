@@ -8,13 +8,13 @@ A Keycloak client to easily manage authentication, with minimum effort. Keycloak
 There are also 2 plugs. Each useful in different scenarios:
 
 * `KeycloakEx.VerifyBearerToken` - Ideal for API scenarios where the token is not managed by the backend. Where the token is received in the header  as authorization bearer token. The plug will verify  the validity of the token and respond accordingly.
-        
+
 * `KeycloakEx.VerifySessionToken` - Ideal for Phoenix HTML/Live views but the token is managed by the backend. Plug would manage token in the session.
-  
+
 **NOTE**
 
   From keycloak 18 there where a number of update one of which is the removal of "auth" from the host_uri.
-  The plugin was update to remove /auth from the uri by default. So if you are utilizing an older version of
+  The plugin was updated to remove /auth from the uri by default. So if you are utilizing an older version of
   Keycloak its important to add "/auth" as part of the host_uri ex:  host_uri: "http://localhost:8081/auth"
 
 # Setup
@@ -29,7 +29,18 @@ To create a User Client. Add the following snippet in a config.exs file:
         site: "http://localhost:4000",
         scope: "testapp_scope",
         host_uri: "http://localhost:8081",
-        client_secret: "afdasfasfsf"
+        client_secret: "afdasfasfsf",
+        public_uri: "https://some-public-keycloack-host"
+
+`:public_uri` is a publicly reachable Keycloak URI.
+This setting is optional: if omitted, `:host_uri` will be used instead.
+Setting both `:host_uri` and `:public_uri` can be useful to achieve the following
+communication scheme:
+   - a back-end server (Phoenix app) reaches Keycloak by its 'direct' private address
+(for example, a k8s service), which must be set in `:host_uri`.
+   - `:public_uri` is used solely for end-users <-> Keycloak interaction.
+The back-end server redirects users to it for entering their credentials but never
+uses it by itself to communicate with Keycloak.
 
 Create module with the user client code
 

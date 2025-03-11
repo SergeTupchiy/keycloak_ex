@@ -13,7 +13,7 @@ defmodule KeycloakEx do
 
   **NOTE**
   From keycloak 18 there where a number of update one of which is the removal of "auth" from the host_uri.
-  The plugin was update to remove /auth from the uri by default. So if you are utilizing an older version of
+  The plugin was updated to remove /auth from the uri by default. So if you are utilizing an older version of
   Keycloak its important to add "/auth" as part of the host_uri ex:  host_uri: "http://localhost:8081/auth"
 
   #Setup
@@ -27,7 +27,19 @@ defmodule KeycloakEx do
         client_id: "testapp-portal",
         site: "http://localhost:4000",
         scope: "testapp_scope",
-        host_uri: "http://localhost:8081"
+        host_uri: "http://localhost:8081",
+        client_secret: "afdasfasfsf",
+        public_uri: "https://some-public-keycloack-host"
+
+  `:public_uri` is a publicly reachable Keycloak URI.
+  This setting is optional: if omitted, `:host_uri` will be used instead.
+  Setting both `:host_uri` and `:public_uri` can be useful to achieve the following
+  communication scheme:
+      - a back-end server (Phoenix app) reaches Keycloak by its 'direct' private address
+  (for example, a k8s service), which must be set in `:host_uri`.
+      - `:public_uri` is used solely for end-users <-> Keycloak interaction.
+  The back-end server redirects users to it for entering their credentials but never
+  uses it by itself to communicate with Keycloak.
 
   Create module with the user client code
 

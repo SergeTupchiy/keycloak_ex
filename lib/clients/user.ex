@@ -12,24 +12,15 @@ defmodule KeycloakEx.Client.User do
 
       @spec new :: OAuth2.Client.t()
       def new do
-        conf = config()
-
-        OAuth2.Client.new(
-          strategy: __MODULE__,
-          client_id: conf[:client_id],
-          client_secret: conf[:client_secret],
-          redirect_uri: "#{conf[:site]}/login_cb",
-          site: conf[:site],
-          authorize_url: "#{conf[:host_uri]}/realms/#{conf[:realm]}/protocol/openid-connect/auth",
-          token_url: "#{conf[:host_uri]}/realms/#{conf[:realm]}/protocol/openid-connect/token"
-        )
-        |> OAuth2.Client.put_serializer("application/json", Jason)
+        new_from_conf(config())
       end
 
       def authorize_url!(params \\ []) do
         conf = config()
 
-        new()
+        conf
+        |> maybe_put_public_auth_uri()
+        |> new_from_conf()
         |> put_param(:scope, conf[:scope])
         |> OAuth2.Client.authorize_url!(params)
       end
@@ -38,10 +29,12 @@ defmodule KeycloakEx.Client.User do
         OAuth2.Client.get_token!(new(), params, headers)
       end
 
+      @impl true
       def authorize_url(client, params \\ []) do
         OAuth2.Strategy.AuthCode.authorize_url(client, params)
       end
 
+      @impl true
       def get_token(client, params, headers) do
         client
         |> put_header("Accept", "application/json")
@@ -86,6 +79,26 @@ defmodule KeycloakEx.Client.User do
 
           err ->
             err
+        end
+      end
+
+      defp new_from_conf(conf) do
+        OAuth2.Client.new(
+          strategy: __MODULE__,
+          client_id: conf[:client_id],
+          client_secret: conf[:client_secret],
+          redirect_uri: "#{conf[:site]}/login_cb",
+          site: conf[:site],
+          authorize_url: "#{conf[:host_uri]}/realms/#{conf[:realm]}/protocol/openid-connect/auth",
+          token_url: "#{conf[:host_uri]}/realms/#{conf[:realm]}/protocol/openid-connect/token"
+        )
+        |> OAuth2.Client.put_serializer("application/json", Jason)
+      end
+
+      defp maybe_put_public_auth_uri(conf) do
+        case conf[:public_uri] do
+          nil -> conf
+          uri -> Keyword.put(conf, :host_uri, uri)
         end
       end
     end
